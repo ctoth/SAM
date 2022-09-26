@@ -13,16 +13,14 @@ int main(int argc, char *argv[])
     toSpeak.pitch = 64;
     toSpeak.mouth = 128;
     toSpeak.throat = 128;
-    toSpeak.input = "Fuck off, world";
+    toSpeak.input = "I am SAM, the Software Automatic Mouth!";
     toSpeak.callback = &callback;
     SAMSpeak(&toSpeak);
     return 0;
 }
 
 void callback(void *userdata, char *buffer, int length)
-
 {
     // print some data bout what we were given
-    printf("userdata: %p, buffer: %p, length: %d\n", userdata, buffer, length);
-    WriteWav("out.wav", buffer, length/50);
+    WriteWav("out.wav", buffer, length / 50);
 }

@@ -1,6 +1,7 @@
 #include "sam.h"
 #include "sam_tabs.h"
 
+#include <string.h>
 // The input[] buffer contains a string of phonemes and stress markers along
 // the lines of:
 //

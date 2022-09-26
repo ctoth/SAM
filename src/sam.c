@@ -8,6 +8,37 @@
 #include "render.h"
 #include "rules.h"
 #include "sam.h"
+#include "sam_tabs.h"
+
+void PrintPhonemes(SAMContext *ctx)
+{
+    int i = 0;
+    printf("===========================================\n");
+
+    printf("Internal Phoneme presentation:\n\n");
+    printf(" idx    phoneme  length  stress\n");
+    printf("------------------------------\n");
+
+    while ((ctx->phonemeindex[i] != 255) && (i < 255))
+    {
+        if (ctx->phonemeindex[i] < 81)
+        {
+            printf(" %3i      %c%c      %3i       %i\n",
+                   ctx->phonemeindex[i],
+                   signInputTable1[ctx->phonemeindex[i]],
+                   signInputTable2[ctx->phonemeindex[i]],
+                   ctx->phonemeLength[i],
+                   ctx->stress[i]);
+        }
+        else
+        {
+            printf(" %3i      ??      %3i       %i\n", ctx->phonemeindex[i], ctx->phonemeLength[i], ctx->stress[i]);
+        }
+        i++;
+    }
+    printf("===========================================\n");
+    printf("\n");
+}
 
 void SAMInit(SAMContext *ctx)
 {
@@ -41,15 +72,17 @@ void SAMSpeak(SAMUtterance *toSpeak)
     // make a copy of the input string to pass to get phonemes out of
     // this is because the input string is modified by the phoneme parser
     char inputCopy[256];
-    // uppercase input
     strcpy(inputCopy, toSpeak->input);
+
     // uppercase the copy
     for (int i = 0; i < strlen(inputCopy); i++)
     {
         inputCopy[i] = toupper(inputCopy[i]);
     }
+
     TextToPhonemes(&ctx, inputCopy);
     ctx.toSpeak.input = inputCopy;
+    printf("Input: %s\n", ctx.toSpeak.input);
     SAMInit(&ctx);
     ParsePhonemes(&ctx);
     ApplyRules(&ctx);
@@ -59,9 +92,10 @@ void SAMSpeak(SAMUtterance *toSpeak)
     AddVoicedStopConsonants(&ctx);
     CheckPhonemes(&ctx);
     InsertBreath(&ctx);
+    // PrintPhonemes(&ctx);
     PrepareOutput(&ctx);
 
-    // if we were passed a callback on ctx->toSpeak, call it now with our buffer-
+    // if we were passed a callback on toSpeak, call it now with our buffer-
     if (toSpeak->callback)
         toSpeak->callback(toSpeak->userdata, ctx.buffer, ctx.bufferpos);
 

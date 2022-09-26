@@ -1,6 +1,7 @@
 #include "sam.h"
 #include "rules.h"
 #include "sam_tabs.h"
+#include <stdio.h>
 
 void Insert(SAMContext *ctx, unsigned char position, unsigned char phonemeIndex, unsigned char phonemeLength, unsigned char stress)
 {
@@ -19,6 +20,7 @@ void Insert(SAMContext *ctx, unsigned char position, unsigned char phonemeIndex,
 
 void ChangeRule(SAMContext *ctx, unsigned char position, unsigned char phonemeIndex, const char *descr)
 {
+    // printf("RULE: %s\n", descr);
     ctx->phonemeindex[position] = 13; // rule;
     Insert(ctx, position + 1, phonemeIndex, 0, ctx->stress[position]);
 }
@@ -86,7 +88,7 @@ void ApplyRules(SAMContext *ctx)
 
     while ((p = ctx->phonemeindex[pos]) != END)
     {
-        unsigned short pf;
+        unsigned short phonemeFlags;
         unsigned char prior;
 
         if (p == 0)
@@ -95,18 +97,18 @@ void ApplyRules(SAMContext *ctx)
             continue;
         }
 
-        pf = flags[p];
+        phonemeFlags = flags[p];
         prior = ctx->phonemeindex[pos - 1];
 
-        if ((pf & FLAG_DIPTHONG))
-            rule_dipthong(ctx, p, pf, pos);
+        if ((phonemeFlags & FLAG_DIPTHONG))
+            rule_dipthong(ctx, p, phonemeFlags, pos);
         else if (p == 78)
             ChangeRule(ctx, pos, 24, "UL -> AX L"); // Example: MEDDLE
         else if (p == 79)
             ChangeRule(ctx, pos, 27, "UM -> AX M"); // Example: ASTRONOMY
         else if (p == 80)
             ChangeRule(ctx, pos, 28, "UN -> AX N"); // Example: FUNCTION
-        else if ((pf & FLAG_VOWEL) && ctx->stress[pos])
+        else if ((phonemeFlags & FLAG_VOWEL) && ctx->stress[pos])
         {
             // RULE:
             //       <STRESSED VOWEL> <SILENCE> <STRESSED VOWEL> -> <STRESSED VOWEL> <SILENCE> Q <VOWEL>
@@ -116,7 +118,6 @@ void ApplyRules(SAMContext *ctx)
                 p = ctx->phonemeindex[pos + 2];
                 if (p != END && (flags[p] & FLAG_VOWEL) && ctx->stress[pos + 2])
                 {
-
                     Insert(ctx, pos + 2, 31, 0, 0); // 31 = 'Q'
                 }
             }
@@ -151,9 +152,9 @@ void ApplyRules(SAMContext *ctx)
                 // If at end, replace current phoneme with KX
                 if ((flags[Y] & FLAG_DIP_YX) == 0 || Y == END)
                 { // VOWELS AND DIPTHONGS ENDING WITH IY SOUND flag set?
-                    ctx->phonemeindex[pos] = 7;
+                    ctx->phonemeindex[pos] = 75;
                     p = 75;
-                    pf = flags[p];
+                    phonemeFlags = flags[p];
                 }
             }
 
@@ -169,7 +170,7 @@ void ApplyRules(SAMContext *ctx)
 
                 ctx->phonemeindex[pos] = p - 12;
             }
-            else if (!(pf & FLAG_PLOSIVE))
+            else if (!(phonemeFlags & FLAG_PLOSIVE))
             {
                 p = ctx->phonemeindex[pos];
                 if (p == 53)
@@ -413,9 +414,9 @@ void AdjustPhonemeLengths(SAMContext *ctx)
 
             // FIXME: The debug code here breaks the rule.
             // prior phoneme a stop consonant>
-            if ((flags[index] & FLAG_STOPCONS) != 0)
+            // if ((flags[index] & FLAG_STOPCONS) != 0)
 
-                ctx->phonemeLength[X] -= 2; // 20ms
+            ctx->phonemeLength[X] -= 2; // 20ms
         }
 
         ++loopIndex;

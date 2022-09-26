@@ -22,9 +22,9 @@ typedef struct SAMContext
 {
 
     SAMUtterance toSpeak;
-    unsigned char inputtemp[256]; // for reciter, rename. 
+    unsigned char reciterInput[256]; // for reciter, rename.
     unsigned char A;
-    unsigned char X;
+    unsigned char reciterIndex;
     unsigned char stress[256];        // numbers from 0 to 8
     unsigned char phonemeLength[256]; // tab40160
     unsigned char phonemeindex[256];
@@ -58,10 +58,9 @@ enum
     END = 255
 };
 
+void PrintPhonemes(SAMContext *ctx);
 void SAMInit(SAMContext *ctx);
-signed int full_match(unsigned char sign1, unsigned char sign2);
-signed int wild_match(unsigned char sign1);
-int ParsePhonemes(SAMContext *ctx);
+
 void PrepareOutput(SAMContext *ctx);
 void SAMSpeak(SAMUtterance *toSpeak);
 void SAMFree(SAMContext *ctx);

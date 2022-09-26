@@ -31,21 +31,21 @@ int TextToPhonemes(SAMContext *ctx, unsigned char *input)
 
     int r;
 
-    ctx->inputtemp[0] = ' ';
+    ctx->reciterInput[0] = ' ';
 
     // secure copy of input
     // because input will be overwritten by phonemes
-    ctx->X = 0;
+    ctx->reciterIndex = 0;
     do
     {
-        ctx->A = input[ctx->X] & 127;
+        ctx->A = input[ctx->reciterIndex] & 127;
         if (ctx->A >= 112)
             ctx->A = ctx->A & 95;
         else if (ctx->A >= 96)
             ctx->A = ctx->A & 79;
-        ctx->inputtemp[++ctx->X] = ctx->A;
-    } while (ctx->X < 255);
-    ctx->inputtemp[255] = 27;
+        ctx->reciterInput[++ctx->reciterIndex] = ctx->A;
+    } while (ctx->reciterIndex < 255);
+    ctx->reciterInput[255] = 27;
     phonemeOutputPos = mem61 = 255;
 
 pos36554:
@@ -53,25 +53,25 @@ pos36554:
     {
         while (1)
         {
-            ctx->X = ++mem61;
-            mem64 = ctx->inputtemp[ctx->X];
+            ctx->reciterIndex = ++mem61;
+            mem64 = ctx->reciterInput[ctx->reciterIndex];
             if (mem64 == '[')
             {
-                ctx->X = ++phonemeOutputPos;
-                input[ctx->X] = 155;
+                ctx->reciterIndex = ++phonemeOutputPos;
+                input[ctx->reciterIndex] = 155;
                 return 1;
             }
 
             if (mem64 != '.')
                 break;
-            ctx->X++;
-            ctx->A = tab36376[ctx->inputtemp[ctx->X]] & 1;
+            ctx->reciterIndex++;
+            ctx->A = tab36376[ctx->reciterInput[ctx->reciterIndex]] & 1;
             if (ctx->A != 0)
                 break;
             phonemeOutputPos++;
-            ctx->X = phonemeOutputPos;
+            ctx->reciterIndex = phonemeOutputPos;
             ctx->A = '.';
-            input[ctx->X] = '.';
+            input[ctx->reciterIndex] = '.';
         }
         mem57 = tab36376[mem64];
         if ((mem57 & 2) != 0)
@@ -82,22 +82,22 @@ pos36554:
 
         if (mem57 != 0)
             break;
-        ctx->inputtemp[ctx->X] = ' ';
-        ctx->X = ++phonemeOutputPos;
-        if (ctx->X > 120)
+        ctx->reciterInput[ctx->reciterIndex] = ' ';
+        ctx->reciterIndex = ++phonemeOutputPos;
+        if (ctx->reciterIndex > 120)
         {
-            input[ctx->X] = 155;
+            input[ctx->reciterIndex] = 155;
             return 1;
         }
-        input[ctx->X] = 32;
+        input[ctx->reciterIndex] = 32;
     }
 
     if (!(mem57 & 128))
         return 0;
 
     // go to the right rules for this character.
-    ctx->X = mem64 - 'A';
-    curRulePos = tab37489[ctx->X] | (tab37515[ctx->X] << 8);
+    ctx->reciterIndex = mem64 - 'A';
+    curRulePos = tab37489[ctx->reciterIndex] | (tab37515[ctx->reciterIndex] << 8);
 
 pos36700:
     // find next rule
@@ -114,17 +114,17 @@ pos36700:
         ;
     mem64 = Y;
 
-    mem60 = ctx->X = mem61;
+    mem60 = ctx->reciterIndex = mem61;
     // compare the string within the bracket
     Y = mem66 + 1;
 
     while (1)
     {
-        if (GetRuleByte(curRulePos, Y) != ctx->inputtemp[ctx->X])
+        if (GetRuleByte(curRulePos, Y) != ctx->reciterInput[ctx->reciterIndex])
             goto pos36700;
         if (++Y == mem65)
             break;
-        mem60 = ++ctx->X;
+        mem60 = ++ctx->reciterIndex;
     }
 
     // the string in the bracket is correct
@@ -143,10 +143,10 @@ pos36700:
                 mem58 = mem60;
                 goto pos37184;
             }
-            ctx->X = mem57 & 127;
-            if ((tab36376[ctx->X] & 128) == 0)
+            ctx->reciterIndex = mem57 & 127;
+            if ((tab36376[ctx->reciterIndex] & 128) == 0)
                 break;
-            if (ctx->inputtemp[mem59 - 1] != mem57)
+            if (ctx->reciterInput[mem59 - 1] != mem57)
                 goto pos36700;
             --mem59;
         }
@@ -161,11 +161,11 @@ pos36700:
             case '&':
                 if (!Code37055(ctx, mem59 - 1, 16))
                 {
-                    if (ctx->inputtemp[ctx->X] != 'H')
+                    if (ctx->reciterInput[ctx->reciterIndex] != 'H')
                         r = 1;
                     else
                     {
-                        ctx->A = ctx->inputtemp[--ctx->X];
+                        ctx->A = ctx->reciterInput[--ctx->reciterIndex];
                         if ((ctx->A != 'C') && (ctx->A != 'S'))
                             r = 1;
                     }
@@ -175,7 +175,7 @@ pos36700:
             case '@':
                 if (!Code37055(ctx, mem59 - 1, 4))
                 {
-                    ctx->A = ctx->inputtemp[ctx->X];
+                    ctx->A = ctx->reciterInput[ctx->reciterIndex];
                     if (ctx->A != 72)
                         r = 1;
                     if ((ctx->A != 84) && (ctx->A != 67) && (ctx->A != 83))
@@ -183,8 +183,8 @@ pos36700:
                 }
                 break;
             case '+':
-                ctx->X = mem59;
-                ctx->A = ctx->inputtemp[--ctx->X];
+                ctx->reciterIndex = mem59;
+                ctx->A = ctx->reciterInput[--ctx->reciterIndex];
                 if ((ctx->A != 'E') && (ctx->A != 'I') && (ctx->A != 'Y'))
                     r = 1;
                 break;
@@ -200,20 +200,20 @@ pos36700:
         if (r == 1)
             goto pos36700;
 
-        mem59 = ctx->X;
+        mem59 = ctx->reciterIndex;
     }
 
     do
     {
-        ctx->X = mem58 + 1;
-        if (ctx->inputtemp[ctx->X] == 'E')
+        ctx->reciterIndex = mem58 + 1;
+        if (ctx->reciterInput[ctx->reciterIndex] == 'E')
         {
-            if ((tab36376[ctx->inputtemp[ctx->X + 1]] & 128) != 0)
+            if ((tab36376[ctx->reciterInput[ctx->reciterIndex + 1]] & 128) != 0)
             {
-                ctx->A = ctx->inputtemp[++ctx->X];
+                ctx->A = ctx->reciterInput[++ctx->reciterIndex];
                 if (ctx->A == 'L')
                 {
-                    if (ctx->inputtemp[++ctx->X] != 'Y')
+                    if (ctx->reciterInput[++ctx->reciterIndex] != 'Y')
                         goto pos36700;
                 }
                 else if ((ctx->A != 'R') && (ctx->A != 'S') && (ctx->A != 'D') && !IsNextInput(ctx, "FUL"))
@@ -224,7 +224,7 @@ pos36700:
         {
             if (!IsNextInput(ctx, "ING"))
                 goto pos36700;
-            mem58 = ctx->X;
+            mem58 = ctx->reciterIndex;
         }
 
     pos37184:
@@ -253,7 +253,7 @@ pos36700:
                 mem57 = GetRuleByte(curRulePos, Y);
                 if ((tab36376[mem57] & 128) == 0)
                     break;
-                if (ctx->inputtemp[mem58 + 1] != mem57)
+                if (ctx->reciterInput[mem58 + 1] != mem57)
                 {
                     r = 1;
                     break;
@@ -268,7 +268,7 @@ pos36700:
                 {
                     if (Code37055(ctx, mem58 + 1, 4) == 0)
                     {
-                        ctx->A = ctx->inputtemp[ctx->X];
+                        ctx->A = ctx->reciterInput[ctx->reciterIndex];
                         if ((ctx->A != 82) && (ctx->A != 84) &&
                             (ctx->A != 67) && (ctx->A != 83))
                             r = 1;
@@ -281,7 +281,7 @@ pos36700:
                 else if (ctx->A == ':')
                 {
                     while (Code37055(ctx, mem58 + 1, 32))
-                        mem58 = ctx->X;
+                        mem58 = ctx->reciterIndex;
                     r = -2;
                 }
                 else
@@ -296,7 +296,7 @@ pos36700:
                 continue;
             }
             if (r == 0)
-                mem58 = ctx->X;
+                mem58 = ctx->reciterIndex;
         } while (r == 0);
     } while (ctx->A == '%');
     return 0;
@@ -307,7 +307,7 @@ unsigned int IsNextInput(SAMContext *ctx, const char *str)
     while (*str)
     {
         unsigned char ch = *str;
-        ctx->A = ctx->inputtemp[ctx->X++];
+        ctx->A = ctx->reciterInput[ctx->reciterIndex++];
         if (ctx->A != ch)
             return 0;
         ++str;
@@ -318,15 +318,15 @@ unsigned int IsNextInput(SAMContext *ctx, const char *str)
 /* Retrieve flags for character at mem59-1 */
 unsigned char Code37055(SAMContext *ctx, unsigned char npos, unsigned char mask)
 {
-    ctx->X = npos;
-    return tab36376[ctx->inputtemp[ctx->X]] & mask;
+    ctx->reciterIndex = npos;
+    return tab36376[ctx->reciterInput[ctx->reciterIndex]] & mask;
 }
 
 int handle_ch(SAMContext *ctx, unsigned char ch, unsigned char mem)
 {
     unsigned char tmp;
-    ctx->X = mem;
-    tmp = tab36376[ctx->inputtemp[ctx->X]];
+    ctx->reciterIndex = mem;
+    tmp = tab36376[ctx->reciterInput[ctx->reciterIndex]];
     if (ch == ' ')
     {
         if ((tmp & 128) != 0)
@@ -346,9 +346,9 @@ int handle_ch(SAMContext *ctx, unsigned char ch, unsigned char mem)
     {
         if ((tmp & 16) == 0)
         {
-            if (ctx->inputtemp[ctx->X] != 72)
+            if (ctx->reciterInput[ctx->reciterIndex] != 72)
                 return 1;
-            ++ctx->X;
+            ++ctx->reciterIndex;
         }
     }
     else if (ch == '^')
@@ -358,8 +358,8 @@ int handle_ch(SAMContext *ctx, unsigned char ch, unsigned char mem)
     }
     else if (ch == '+')
     {
-        ctx->X = mem;
-        ch = ctx->inputtemp[ctx->X];
+        ctx->reciterIndex = mem;
+        ch = ctx->reciterInput[ctx->reciterIndex];
         if ((ch != 69) && (ch != 73) && (ch != 89))
             return 1;
     }
@@ -371,8 +371,8 @@ int handle_ch(SAMContext *ctx, unsigned char ch, unsigned char mem)
 int handle_ch2(SAMContext *ctx, unsigned char ch, unsigned char mem)
 {
     unsigned char tmp;
-    ctx->X = mem;
-    tmp = tab36376[ctx->inputtemp[mem]];
+    ctx->reciterIndex = mem;
+    tmp = tab36376[ctx->reciterInput[mem]];
     if (ch == ' ')
     {
         if (tmp & 128)
