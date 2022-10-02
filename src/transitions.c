@@ -133,7 +133,7 @@ unsigned char CreateTransitions(SAMContext *ctx)
         }
         else if (rank < next_rank)
         {
-            // next phoneme is stronger, so us its blend lengths
+            // next phoneme is stronger, so use its blend lengths
             phase1 = inBlendLength[next_phoneme];
             phase2 = outBlendLength[next_phoneme];
         }

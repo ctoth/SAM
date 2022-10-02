@@ -1,3 +1,4 @@
+#include "phoneme_parser.h"
 #include "sam.h"
 #include "sam_tabs.h"
 
@@ -63,6 +64,7 @@ int ParsePhonemes(SAMContext *ctx)
     memset(ctx->stress, 0, 256); // Clear the stress table.
 
     while ((sign1 = ctx->toSpeak.input[srcpos]) != 155)
+    
     { // 155 (\233) is end of line marker
         signed int match;
         unsigned char sign2 = ctx->toSpeak.input[++srcpos];

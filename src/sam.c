@@ -67,22 +67,22 @@ void SAMInit(SAMContext *ctx)
 
 void SAMSpeak(SAMUtterance *toSpeak)
 {
+    printf("input: %s", toSpeak->input);
     SAMContext ctx;
     ctx.toSpeak = *toSpeak;
     // make a copy of the input string to pass to get phonemes out of
     // this is because the input string is modified by the phoneme parser
     char inputCopy[256];
+    memset  (inputCopy, 155, 256);
     strcpy(inputCopy, toSpeak->input);
-
     // uppercase the copy
     for (int i = 0; i < strlen(inputCopy); i++)
     {
         inputCopy[i] = toupper(inputCopy[i]);
     }
-
     TextToPhonemes(&ctx, inputCopy);
     ctx.toSpeak.input = inputCopy;
-    printf("Input: %s\n", ctx.toSpeak.input);
+    // printf("Input: %s\n", ctx.toSpeak.input);
     SAMInit(&ctx);
     ParsePhonemes(&ctx);
     ApplyRules(&ctx);
