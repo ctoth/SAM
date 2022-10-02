@@ -462,12 +462,12 @@ void RenderSample(SAMContext *ctx, unsigned char *out, unsigned char consonantFl
 //
 // 4. Render the each frame.
 
-void RenderAudio(SAMContext *ctx)
+int RenderAudio(SAMContext *ctx)
 {
     unsigned char totalFrameCount = 0;
 
     if (ctx->phonemeIndexOutput[0] == 255)
-        return; // exit if no data
+        return 0; // exit if no data
 
     CreateFrames(ctx);
     totalFrameCount = CreateTransitions(ctx);
@@ -476,4 +476,5 @@ void RenderAudio(SAMContext *ctx)
         AssignPitchContour(ctx);
     RescaleAmplitude(ctx);
     ProcessFrames(ctx, totalFrameCount);
+    return totalFrameCount;
 }

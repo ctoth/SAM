@@ -19,7 +19,7 @@ void PrintPhonemes(SAMContext *ctx)
     printf(" idx    phoneme  length  stress\n");
     printf("------------------------------\n");
 
-    while ((ctx->phonemeindex[i] != 255) && (i < 255))
+    while ((ctx->phonemeindex[i] != END) && (i < 255))
     {
         if (ctx->phonemeindex[i] < 81)
         {
@@ -67,13 +67,13 @@ void SAMInit(SAMContext *ctx)
 
 void SAMSpeak(SAMUtterance *toSpeak)
 {
-    printf("input: %s", toSpeak->input);
+    printf("input: %s\n", toSpeak->input);
     SAMContext ctx;
     ctx.toSpeak = *toSpeak;
     // make a copy of the input string to pass to get phonemes out of
     // this is because the input string is modified by the phoneme parser
     char inputCopy[256];
-    memset  (inputCopy, 155, 256);
+    memset(inputCopy, 155, 256);
     strcpy(inputCopy, toSpeak->input);
     // uppercase the copy
     for (int i = 0; i < strlen(inputCopy); i++)
@@ -82,7 +82,6 @@ void SAMSpeak(SAMUtterance *toSpeak)
     }
     TextToPhonemes(&ctx, inputCopy);
     ctx.toSpeak.input = inputCopy;
-    // printf("Input: %s\n", ctx.toSpeak.input);
     SAMInit(&ctx);
     ParsePhonemes(&ctx);
     ApplyRules(&ctx);
@@ -96,8 +95,8 @@ void SAMSpeak(SAMUtterance *toSpeak)
     PrepareOutput(&ctx);
 
     // if we were passed a callback on toSpeak, call it now with our buffer-
-    if (toSpeak->callback)
-        toSpeak->callback(toSpeak->userdata, ctx.buffer, ctx.bufferpos);
+    if (toSpeak->finished_callback)
+        toSpeak->finished_callback(toSpeak->userdata, ctx.buffer, ctx.bufferpos);
 
     SAMFree(&ctx);
 }

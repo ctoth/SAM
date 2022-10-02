@@ -1,13 +1,14 @@
 #ifndef __SAM_H__
 #define __SAM_H__
 
+
 // A struct with the input to speak and a callback to be called when speaking completes
 // also includes parameters for voice
 
 typedef struct SAMUtterance
 {
     char *input;
-    void (*callback)(void *, char *, int);
+    void (*finished_callback)(void *userdata, char *buffer, unsigned int length);
     unsigned char speed;
     unsigned char pitch;
     unsigned char mouth;
@@ -45,18 +46,18 @@ typedef struct SAMContext
     unsigned char freq2data[80];
 
     // contains the final soundbuffer
-    int bufferpos;
+    unsigned int bufferpos;
     char *buffer;
 } SAMContext;
 
-enum
+typedef enum
 {
     pR = 23,
     pD = 57,
     pT = 69,
     BREAK = 254,
     END = 255
-};
+} Phonemes;
 
 void PrintPhonemes(SAMContext *ctx);
 void SAMInit(SAMContext *ctx);
