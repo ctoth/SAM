@@ -1,4 +1,3 @@
-
 #include "render.h"
 #include "sam.h"
 #include "render_tabs.h"
@@ -8,10 +7,10 @@
 
 void WriteToBuf(SAMContext *ctx, int index, unsigned char A)
 {
-    static unsigned oldtimetableindex = 0;
+
     int k;
-    ctx->bufferpos += timetable[oldtimetableindex][index];
-    oldtimetableindex = index;
+    ctx->bufferpos += timetable[ctx->oldtimetableindex][index];
+    ctx->oldtimetableindex = index;
     // write a little bit in advance
     for (k = 0; k < 5; k++)
         ctx->buffer[ctx->bufferpos / 50 + k] = (A & 15) * 16;
@@ -159,11 +158,11 @@ void AddInflection(SAMContext *ctx, unsigned char inflection, unsigned char pos)
 void CreateFrames(SAMContext *ctx)
 {
     unsigned char X = 0;
-    unsigned int i = 0;
-    while (i < 256)
+    unsigned int index = 0;
+    while (index < 256)
     {
         // get the phoneme at the index
-        unsigned char phoneme = ctx->phonemeIndexOutput[i];
+        unsigned char phoneme = ctx->phonemeIndexOutput[index];
         unsigned char stressPitch;
         signed frameCount;
 
@@ -177,10 +176,10 @@ void CreateFrames(SAMContext *ctx)
             AddInflection(ctx, FALLING_INFLECTION, X);
 
         // get the stress amount (more stress = higher pitch)
-        stressPitch = stressPitchesTable[ctx->stressOutput[i] + 1];
+        stressPitch = stressPitchesTable[ctx->stressOutput[index] + 1];
 
         // get number of frames to write
-        frameCount = ctx->phonemeLengthOutput[i];
+        frameCount = ctx->phonemeLengthOutput[index];
 
         // copy from the source to the frames list
 
@@ -196,7 +195,7 @@ void CreateFrames(SAMContext *ctx)
             ctx->pitches[X] = ctx->toSpeak.pitch + stressPitch;            // pitch
             ++X;
         } while (--frameCount != 0);
-        ++i;
+        ++index;
     }
 }
 
@@ -211,9 +210,10 @@ void AssignPitchContour(SAMContext *ctx)
     int i;
     for (i = 0; i < 256; i++)
     {
-        // subtract half the frequency of the formant 1.
+        // subtract half of the frequency of the formant 1.
         // this adds variety to the voice
         ctx->pitches[i] -= (ctx->frequency1[i] >> 1);
+        // ctx->pitches[i] -= (ctx->frequency1[i] - (ctx->frequency1[i] >> 2));
     }
 }
 
@@ -236,10 +236,10 @@ void CombineGlottalAndFormants(SAMContext *ctx, unsigned char phase1, unsigned c
 {
     unsigned int tmp;
 
-    tmp = multtable[sinus[phase1] | ctx->amplitude1[Y]];
-    tmp += multtable[sinus[phase2] | ctx->amplitude2[Y]];
-    tmp += tmp > 255 ? 1 : 0; // if addition above overflows, we for some reason add one;
-    tmp += multtable[rectangle[phase3] | ctx->amplitude3[Y]];
+    tmp = multtable[sinus[phase1] | ctx->amplitude1[Y]];      //     F1
+    tmp += multtable[sinus[phase2] | ctx->amplitude2[Y]];     // +   F2
+    tmp += tmp > 255 ? 1 : 0;                                 // if addition above overflows, we for some reason add one;   + 1
+    tmp += multtable[rectangle[phase3] | ctx->amplitude3[Y]]; // +   F3
     tmp += 136;
     tmp >>= 4; // Scale down to 0..15 range of C64 audio.
 
@@ -309,9 +309,9 @@ void ProcessFrames(SAMContext *ctx, unsigned char frameCount)
                 if ((count != 0) || (flags == 0))
                 {
                     // reset the phase of the formants to match the pulse
-                    phase1 += ctx->frequency1[Y];
-                    phase2 += ctx->frequency2[Y];
-                    phase3 += ctx->frequency3[Y];
+                    phase1 += ctx->frequency1[Y]; // F1
+                    phase2 += ctx->frequency2[Y]; // F2
+                    phase3 += ctx->frequency3[Y]; // F3
                     continue;
                 }
 
@@ -333,23 +333,23 @@ void ProcessFrames(SAMContext *ctx, unsigned char frameCount)
     }
 }
 
-static unsigned char RenderVoicedSample(SAMContext *ctx, unsigned short hi, unsigned char off, unsigned char phase1)
+static unsigned char RenderVoicedSample(SAMContext *ctx, unsigned short hi, unsigned char offset, unsigned char phase1)
 {
     do
     {
         unsigned char bit = 8;
-        unsigned char sample = sampleTable[hi + off];
+        unsigned char sample = sampleTable[hi + offset];
         do
         {
-            if ((sample & 128) != 0)
+            if ((sample & 128) != 0) // bit 7 set?
                 WriteToBuf(ctx, 3, 26);
             else
                 WriteToBuf(ctx, 4, 6);
             sample <<= 1;
         } while (--bit != 0);
-        off++;
+        offset++;
     } while (++phase1 != 0);
-    return off;
+    return offset;
 }
 
 void RenderUnvoicedSample(SAMContext *ctx, unsigned short hi, unsigned char off, unsigned char mem53)
@@ -460,7 +460,7 @@ void RenderSample(SAMContext *ctx, unsigned char *out, unsigned char consonantFl
 //
 // 3. Offset the pitches by the fundamental frequency.
 //
-// 4. Render the each frame.
+// 4. Render each frame.
 
 int RenderAudio(SAMContext *ctx)
 {

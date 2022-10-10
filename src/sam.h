@@ -1,7 +1,6 @@
 #ifndef __SAM_H__
 #define __SAM_H__
 
-
 // A struct with the input to speak and a callback to be called when speaking completes
 // also includes parameters for voice
 
@@ -44,6 +43,8 @@ typedef struct SAMContext
     unsigned char frequency3[256];
     unsigned char freq1data[80];
     unsigned char freq2data[80];
+
+    unsigned oldtimetableindex;
 
     // contains the final soundbuffer
     unsigned int bufferpos;

@@ -46,7 +46,7 @@ void SAMInit(SAMContext *ctx)
     SAMSetMouthThroat(ctx);
 
     ctx->bufferpos = 0;
-
+    ctx->oldtimetableindex = 0;
     ctx->buffer = malloc(22050 * 10);
 
     for (i = 0; i < 256; i++)
