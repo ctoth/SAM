@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     toSpeak.mouth = 128;
     toSpeak.throat = 128;
     toSpeak.input = "I am SAM, the Software Automatic Mouth!";
-    toSpeak.callback = &callback;
+    toSpeak.finished_callback = &callback;
     SAMSpeak(&toSpeak);
     return 0;
 }
