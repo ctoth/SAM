@@ -2,12 +2,17 @@
 #define __SAM_H__
 
 // A struct with the input to speak and a callback to be called when speaking completes
+// includes an output callback
 // also includes parameters for voice
 
 typedef struct SAMUtterance
 {
     char *input;
-    void (*finished_callback)(void *userdata, char *buffer, unsigned int length);
+    // callback called to output audio
+    void (*output_callback)(void *userdata, char *buffer, unsigned int length);
+
+    // callback called when speaking is complete
+    void (*finished_callback)(void *userdata);
     unsigned char speed;
     unsigned char pitch;
     unsigned char mouth;

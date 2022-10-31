@@ -47,7 +47,6 @@ void SAMInit(SAMContext *ctx)
 
     ctx->bufferpos = 0;
     ctx->oldtimetableindex = 0;
-    ctx->buffer = malloc(22050 * 10);
 
     for (i = 0; i < 256; i++)
     {
@@ -96,7 +95,7 @@ void SAMSpeak(SAMUtterance *toSpeak)
 
     // if we were passed a callback on toSpeak, call it now with our buffer-
     if (toSpeak->finished_callback)
-        toSpeak->finished_callback(toSpeak->userdata, ctx.buffer, ctx.bufferpos);
+        toSpeak->finished_callback(toSpeak->userdata);
 
     SAMFree(&ctx);
 }

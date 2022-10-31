@@ -4,6 +4,7 @@
 #include "sam_tabs.h"
 #include "transitions.h"
 #include <string.h>
+#include <math.h>
 
 void WriteToBuf(SAMContext *ctx, int index, unsigned char A)
 {
@@ -11,9 +12,18 @@ void WriteToBuf(SAMContext *ctx, int index, unsigned char A)
     int k;
     ctx->bufferpos += timetable[ctx->oldtimetableindex][index];
     ctx->oldtimetableindex = index;
-    // write a little bit in advance
-    for (k = 0; k < 5; k++)
-        ctx->buffer[ctx->bufferpos / 50 + k] = (A & 15) * 16;
+
+    // create tiny audio buffer
+    unsigned int l = 0;
+    unsigned char *buf = malloc(16);
+    for (k = 0; k < 3; k++)
+    {
+        // the old code saved to a buffer on the global context.
+        // the new code will write to our tiny buffer then call the callback
+        // ctx->buffer[ctx->bufferpos / 50 + k] = (A & 15) * 16;
+        buf[l++] = (A & 15) * 16;
+    }
+    ctx->toSpeak.output_callback(ctx->toSpeak.userdata, buf, l);
 }
 
 unsigned char MultiplyAndShift(unsigned char a, unsigned char b)
