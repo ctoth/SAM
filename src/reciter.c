@@ -1,6 +1,7 @@
 #include "sam.h"
 #include "reciter.h"
 #include "reciter_tabs.h"
+#include <malloc.h>
 
 unsigned char GetRuleByte(unsigned short address, unsigned char Y)
 {
@@ -13,7 +14,7 @@ unsigned char GetRuleByte(unsigned short address, unsigned char Y)
     return rules[address + Y];
 }
 
-int TextToPhonemes(SAMContext *ctx, unsigned char *input)
+int TextToPhonemes(unsigned char *input)
 {
     unsigned char phonemeOutputPos; // output position for phonemes
     unsigned char mem57;
@@ -23,13 +24,15 @@ int TextToPhonemes(SAMContext *ctx, unsigned char *input)
     unsigned char mem61;
     unsigned short curRulePos; // memory position of current rule
 
-    unsigned char mem64; // position of '=' or current character
-    unsigned char mem65; // position of ')'
-    unsigned char mem66; // position of '('
+    unsigned char mem64;     // position of '=' or current character
+    unsigned char rparenPos; // position of ')'
+    unsigned char lparemPos; // position of '('
 
     unsigned char Y;
 
     int r;
+    // create SAMReciterContext
+    SAMReciterContext *ctx = (SAMReciterContext *)malloc(sizeof(SAMReciterContext));
 
     ctx->reciterInput[0] = ' ';
 
@@ -39,13 +42,10 @@ int TextToPhonemes(SAMContext *ctx, unsigned char *input)
     do
     {
         ctx->A = input[ctx->reciterIndex] & 127;
-        if (ctx->A >= 112)
-            ctx->A = ctx->A & 95;
-        else if (ctx->A >= 96)
-            ctx->A = ctx->A & 79;
         ctx->reciterInput[++ctx->reciterIndex] = ctx->A;
     } while (ctx->reciterIndex < 255);
     ctx->reciterInput[255] = 27;
+
     phonemeOutputPos = mem61 = 255;
 
 pos36554:
@@ -106,23 +106,23 @@ pos36700:
     Y = 0;
     while (GetRuleByte(curRulePos, ++Y) != '(')
         ;
-    mem66 = Y;
+    lparemPos = Y;
     while (GetRuleByte(curRulePos, ++Y) != ')')
         ;
-    mem65 = Y;
+    rparenPos = Y;
     while ((GetRuleByte(curRulePos, ++Y) & 127) != '=')
         ;
     mem64 = Y;
 
     mem60 = ctx->reciterIndex = mem61;
     // compare the string within the bracket
-    Y = mem66 + 1;
+    Y = lparemPos + 1;
 
     while (1)
     {
         if (GetRuleByte(curRulePos, Y) != ctx->reciterInput[ctx->reciterIndex])
             goto pos36700;
-        if (++Y == mem65)
+        if (++Y == rparenPos)
             break;
         mem60 = ++ctx->reciterIndex;
     }
@@ -136,8 +136,8 @@ pos36700:
         unsigned char ch;
         while (1)
         {
-            mem66--;
-            mem57 = GetRuleByte(curRulePos, mem66);
+            lparemPos--;
+            mem57 = GetRuleByte(curRulePos, lparemPos);
             if ((mem57 & 128) != 0)
             {
                 mem58 = mem60;
@@ -233,7 +233,7 @@ pos36700:
         {
             while (1)
             {
-                Y = mem65 + 1;
+                Y = rparenPos + 1;
                 if (Y == mem64)
                 {
                     mem61 = mem60;
@@ -249,7 +249,7 @@ pos36700:
                         Y++;
                     }
                 }
-                mem65 = Y;
+                rparenPos = Y;
                 mem57 = GetRuleByte(curRulePos, Y);
                 if ((tab36376[mem57] & 128) == 0)
                     break;
@@ -302,7 +302,7 @@ pos36700:
     return 0;
 }
 
-unsigned int IsNextInput(SAMContext *ctx, const char *str)
+unsigned int IsNextInput(SAMReciterContext *ctx, const char *str)
 {
     while (*str)
     {
@@ -316,13 +316,13 @@ unsigned int IsNextInput(SAMContext *ctx, const char *str)
 }
 
 /* Retrieve flags for character at mem59-1 */
-unsigned char Code37055(SAMContext *ctx, unsigned char npos, unsigned char mask)
+unsigned char Code37055(SAMReciterContext *ctx, unsigned char npos, unsigned char mask)
 {
     ctx->reciterIndex = npos;
     return tab36376[ctx->reciterInput[ctx->reciterIndex]] & mask;
 }
 
-int handle_ch(SAMContext *ctx, unsigned char ch, unsigned char mem)
+int handle_ch(SAMReciterContext *ctx, unsigned char ch, unsigned char mem)
 {
     unsigned char tmp;
     ctx->reciterIndex = mem;
@@ -368,7 +368,7 @@ int handle_ch(SAMContext *ctx, unsigned char ch, unsigned char mem)
     return 0;
 }
 
-int handle_ch2(SAMContext *ctx, unsigned char ch, unsigned char mem)
+int handle_ch2(SAMReciterContext *ctx, unsigned char ch, unsigned char mem)
 {
     unsigned char tmp;
     ctx->reciterIndex = mem;

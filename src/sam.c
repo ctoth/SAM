@@ -79,7 +79,7 @@ void SAMSpeak(SAMUtterance *toSpeak)
     {
         inputCopy[i] = toupper(inputCopy[i]);
     }
-    TextToPhonemes(&ctx, inputCopy);
+    TextToPhonemes(inputCopy);
     ctx.toSpeak.input = inputCopy;
     SAMInit(&ctx);
     ParsePhonemes(&ctx);

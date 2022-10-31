@@ -27,9 +27,6 @@ typedef struct SAMContext
 {
 
     SAMUtterance toSpeak;
-    unsigned char reciterInput[256]; // for reciter, rename.
-    unsigned char A;
-    unsigned char reciterIndex;
     unsigned char stress[256];        // numbers from 0 to 8
     unsigned char phonemeLength[256]; // tab40160
     unsigned char phonemeindex[256];
