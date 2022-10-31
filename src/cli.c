@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
     toSpeak.throat = 128;
     toSpeak.input = "I am SAM, the Software Automatic Mouth!";
     toSpeak.output_callback = &output_callback;
-    // toSpeak.finished_callback = &output_audio_finished_callback;
-    toSpeak.finished_callback = &write_wav_finished_callback;
+    toSpeak.finished_callback = &output_audio_finished_callback;
+    // toSpeak.finished_callback = &write_wav_finished_callback;
     // create audio buffer and set as userdata
     SAMAudioBuffer audioBuffer;
     audioBuffer.length = 0;
