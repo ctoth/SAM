@@ -29,7 +29,7 @@ typedef struct SAMContext
     SAMUtterance toSpeak;
     unsigned char stress[256];        // numbers from 0 to 8
     unsigned char phonemeLength[256]; // tab40160
-    unsigned char phonemeindex[256];
+    unsigned char phonemeIndex[256];
 
     unsigned char phonemeIndexOutput[60];  // tab47296
     unsigned char stressOutput[60];        // tab47365
@@ -43,14 +43,11 @@ typedef struct SAMContext
     unsigned char frequency1[256];
     unsigned char frequency2[256];
     unsigned char frequency3[256];
+
     unsigned char freq1data[80];
     unsigned char freq2data[80];
 
-    unsigned oldtimetableindex;
-
-    // contains the final soundbuffer
-    unsigned int bufferpos;
-    char *buffer;
+    unsigned oldTimeTableIndex;
 } SAMContext;
 
 typedef enum

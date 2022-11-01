@@ -19,20 +19,20 @@ void PrintPhonemes(SAMContext *ctx)
     printf(" idx    phoneme  length  stress\n");
     printf("------------------------------\n");
 
-    while ((ctx->phonemeindex[i] != END) && (i < 255))
+    while ((ctx->phonemeIndex[i] != END) && (i < 255))
     {
-        if (ctx->phonemeindex[i] < 81)
+        if (ctx->phonemeIndex[i] < 81)
         {
             printf(" %3i      %c%c      %3i       %i\n",
-                   ctx->phonemeindex[i],
-                   signInputTable1[ctx->phonemeindex[i]],
-                   signInputTable2[ctx->phonemeindex[i]],
+                   ctx->phonemeIndex[i],
+                   signInputTable1[ctx->phonemeIndex[i]],
+                   signInputTable2[ctx->phonemeIndex[i]],
                    ctx->phonemeLength[i],
                    ctx->stress[i]);
         }
         else
         {
-            printf(" %3i      ??      %3i       %i\n", ctx->phonemeindex[i], ctx->phonemeLength[i], ctx->stress[i]);
+            printf(" %3i      ??      %3i       %i\n", ctx->phonemeIndex[i], ctx->phonemeLength[i], ctx->stress[i]);
         }
         i++;
     }
@@ -45,8 +45,7 @@ void SAMInit(SAMContext *ctx)
     int i;
     SAMSetMouthThroat(ctx);
 
-    ctx->bufferpos = 0;
-    ctx->oldtimetableindex = 0;
+    ctx->oldTimeTableIndex = 0;
 
     for (i = 0; i < 256; i++)
     {
@@ -60,7 +59,7 @@ void SAMInit(SAMContext *ctx)
         ctx->stressOutput[i] = 0;
         ctx->phonemeLengthOutput[i] = 0;
     }
-    ctx->phonemeindex[255] = END; // to prevent buffer overflow // ML : changed from 32 to 255 to stop freezing with long inputs
+    ctx->phonemeIndex[255] = END; // to prevent buffer overflow // ML : changed from 32 to 255 to stop freezing with long inputs
     // ctx->phonemeindex[255] = 32;  // to prevent buffer overflow
 }
 
@@ -102,7 +101,6 @@ void SAMSpeak(SAMUtterance *toSpeak)
 
 void SAMFree(SAMContext *ctx)
 {
-    free(ctx->buffer);
 }
 
 void PrepareOutput(SAMContext *ctx)
@@ -112,7 +110,7 @@ void PrepareOutput(SAMContext *ctx)
 
     while (1)
     {
-        unsigned char A = ctx->phonemeindex[srcpos];
+        unsigned char A = ctx->phonemeIndex[srcpos];
         ctx->phonemeIndexOutput[destpos] = A;
         switch (A)
         {

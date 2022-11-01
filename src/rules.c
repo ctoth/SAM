@@ -8,12 +8,12 @@ void Insert(SAMContext *ctx, unsigned char position, unsigned char phonemeIndex,
     int i;
     for (i = 253; i >= position; i--) // ML : always keep last safe-guarding 255
     {
-        ctx->phonemeindex[i + 1] = ctx->phonemeindex[i];
+        ctx->phonemeIndex[i + 1] = ctx->phonemeIndex[i];
         ctx->stress[i + 1] = ctx->stress[i];
         ctx->phonemeLength[i + 1] = ctx->phonemeLength[i];
     }
 
-    ctx->phonemeindex[position] = phonemeIndex;
+    ctx->phonemeIndex[position] = phonemeIndex;
     ctx->phonemeLength[position] = phonemeLength;
     ctx->stress[position] = stress;
 }
@@ -21,7 +21,7 @@ void Insert(SAMContext *ctx, unsigned char position, unsigned char phonemeIndex,
 void ChangeRule(SAMContext *ctx, unsigned char position, unsigned char phonemeIndex, const char *descr)
 {
     // printf("RULE: %s\n", descr);
-    ctx->phonemeindex[position] = 13; // rule;
+    ctx->phonemeIndex[position] = 13; // rule;
     Insert(ctx, position + 1, phonemeIndex, 0, ctx->stress[position]);
 }
 
@@ -35,23 +35,23 @@ void rule_g(SAMContext *ctx, unsigned char pos)
     // G <VOWEL OR DIPTHONG NOT ENDING WITH IY> -> GX <VOWEL OR DIPTHONG NOT ENDING WITH IY>
     // Example: GO
 
-    unsigned char index = ctx->phonemeindex[pos + 1];
+    unsigned char index = ctx->phonemeIndex[pos + 1];
 
     // If dipthong ending with YX, move continue processing next phoneme
     if ((index != 255) && ((flags[index] & FLAG_DIP_YX) == 0))
     {
         // replace G with GX and continue processing next phoneme
 
-        ctx->phonemeindex[pos] = 63; // 'GX'
+        ctx->phonemeIndex[pos] = 63; // 'GX'
     }
 }
 
 void rule_alveolar_uw(SAMContext *ctx, unsigned char X)
 {
     // ALVEOLAR flag set?
-    if (flags[ctx->phonemeindex[X - 1]] & FLAG_ALVEOLAR)
+    if (flags[ctx->phonemeIndex[X - 1]] & FLAG_ALVEOLAR)
     {
-        ctx->phonemeindex[X] = 16;
+        ctx->phonemeIndex[X] = 16;
     }
 }
 
@@ -86,7 +86,7 @@ void ApplyRules(SAMContext *ctx)
     unsigned char pos = 0;
     unsigned char p;
 
-    while ((p = ctx->phonemeindex[pos]) != END)
+    while ((p = ctx->phonemeIndex[pos]) != END)
     {
         unsigned short phonemeFlags;
         unsigned char prior;
@@ -98,7 +98,7 @@ void ApplyRules(SAMContext *ctx)
         }
 
         phonemeFlags = flags[p];
-        prior = ctx->phonemeindex[pos - 1];
+        prior = ctx->phonemeIndex[pos - 1];
 
         if ((phonemeFlags & FLAG_DIPTHONG))
             rule_dipthong(ctx, p, phonemeFlags, pos);
@@ -113,9 +113,9 @@ void ApplyRules(SAMContext *ctx)
             // RULE:
             //       <STRESSED VOWEL> <SILENCE> <STRESSED VOWEL> -> <STRESSED VOWEL> <SILENCE> Q <VOWEL>
             // EXAMPLE: AWAY EIGHT
-            if (!ctx->phonemeindex[pos + 1])
+            if (!ctx->phonemeIndex[pos + 1])
             { // If following phoneme is a pause, get next
-                p = ctx->phonemeindex[pos + 2];
+                p = ctx->phonemeIndex[pos + 2];
                 if (p != END && (flags[p] & FLAG_VOWEL) && ctx->stress[pos + 2])
                 {
                     Insert(ctx, pos + 2, 31, 0, 0); // 31 = 'Q'
@@ -125,20 +125,20 @@ void ApplyRules(SAMContext *ctx)
         else if (p == pR)
         { // RULES FOR PHONEMES BEFORE R
             if (prior == pT)
-                ctx->phonemeindex[pos - 1] = 42; // "T R -> CH R"); Example: TRACK
+                ctx->phonemeIndex[pos - 1] = 42; // "T R -> CH R"); Example: TRACK
             else if (prior == pD)
-                ctx->phonemeindex[pos - 1] = 44; // "D R -> J R"); Example: DRY
+                ctx->phonemeIndex[pos - 1] = 44; // "D R -> J R"); Example: DRY
             else if (flags[prior] & FLAG_VOWEL)
-                ctx->phonemeindex[pos] = 18; // "<VOWEL> R -> <VOWEL> RX"); Example: ART
+                ctx->phonemeIndex[pos] = 18; // "<VOWEL> R -> <VOWEL> RX"); Example: ART
         }
         else if (p == 24 && (flags[prior] & FLAG_VOWEL))
-            ctx->phonemeindex[pos] = 19; // "<VOWEL> L -> <VOWEL> LX" // Example: ALL
+            ctx->phonemeIndex[pos] = 19; // "<VOWEL> L -> <VOWEL> LX" // Example: ALL
         else if (prior == 60 && p == 32)
         { // 'G' 'S'
             // Can't get to fire -
             //       1. The G -> GX rule intervenes
             //       2. Reciter already replaces GS -> GZ
-            ctx->phonemeindex[pos] = 38; // "G S -> G Z"
+            ctx->phonemeIndex[pos] = 38; // "G S -> G Z"
         }
         else if (p == 60)
             rule_g(ctx, pos);
@@ -148,11 +148,11 @@ void ApplyRules(SAMContext *ctx)
             { // 'K'
                 // K <VOWEL OR DIPTHONG NOT ENDING WITH IY> -> KX <VOWEL OR DIPTHONG NOT ENDING WITH IY>
                 // Example: COW
-                unsigned char Y = ctx->phonemeindex[pos + 1];
+                unsigned char Y = ctx->phonemeIndex[pos + 1];
                 // If at end, replace current phoneme with KX
                 if ((flags[Y] & FLAG_DIP_YX) == 0 || Y == END)
                 { // VOWELS AND DIPTHONGS ENDING WITH IY SOUND flag set?
-                    ctx->phonemeindex[pos] = 75;
+                    ctx->phonemeIndex[pos] = 75;
                     p = 75;
                     phonemeFlags = flags[p];
                 }
@@ -168,11 +168,11 @@ void ApplyRules(SAMContext *ctx)
                 //      S KX -> S GX
                 // Examples: SPY, STY, SKY, SCOWL
 
-                ctx->phonemeindex[pos] = p - 12;
+                ctx->phonemeIndex[pos] = p - 12;
             }
             else if (!(phonemeFlags & FLAG_PLOSIVE))
             {
-                p = ctx->phonemeindex[pos];
+                p = ctx->phonemeIndex[pos];
                 if (p == 53)
                     rule_alveolar_uw(ctx, pos); // Example: NEW, DEW, SUE, ZOO, THOO, TOO
                 else if (p == 42)
@@ -188,13 +188,13 @@ void ApplyRules(SAMContext *ctx)
                 //       <UNSTRESSED VOWEL> T <PAUSE> -> <UNSTRESSED VOWEL> DX <PAUSE>
                 //       <UNSTRESSED VOWEL> D <PAUSE>  -> <UNSTRESSED VOWEL> DX <PAUSE>
                 // Example: PARTY, TARDY
-                if (flags[ctx->phonemeindex[pos - 1]] & FLAG_VOWEL)
+                if (flags[ctx->phonemeIndex[pos - 1]] & FLAG_VOWEL)
                 {
-                    p = ctx->phonemeindex[pos + 1];
+                    p = ctx->phonemeIndex[pos + 1];
                     if (!p)
-                        p = ctx->phonemeindex[pos + 2];
+                        p = ctx->phonemeIndex[pos + 2];
                     if ((flags[p] & FLAG_VOWEL) && !ctx->stress[pos + 1])
-                        ctx->phonemeindex[pos] = 30; //  "Soften T or D following vowel or ER and preceding a pause -> DX"
+                        ctx->phonemeIndex[pos] = 30; //  "Soften T or D following vowel or ER and preceding a pause -> DX"
                 }
             }
         }
@@ -220,12 +220,12 @@ void CopyStressToPrevVowel(SAMContext *ctx)
     // loop through all the phonemes to be output
     unsigned char pos = 0;
     unsigned char Y;
-    while ((Y = ctx->phonemeindex[pos]) != END)
+    while ((Y = ctx->phonemeIndex[pos]) != END)
     {
         // if CONSONANT_FLAG set, skip - only vowels get stress
         if (flags[Y] & 64)
         {
-            Y = ctx->phonemeindex[pos + 1];
+            Y = ctx->phonemeIndex[pos + 1];
 
             // if the following phoneme is the end, or a vowel, skip
             if (Y != END && (flags[Y] & 128) != 0)
@@ -255,16 +255,16 @@ If a phoneme is stressed, the function looks up the length of that phoneme in th
 void SetPhonemeLengths(SAMContext *ctx)
 {
     int position = 0;
-    while (ctx->phonemeindex[position] != 255)
+    while (ctx->phonemeIndex[position] != 255)
     {
         unsigned char stress = ctx->stress[position];
         if ((stress == 0) || ((stress & 128) != 0))
         {
-            ctx->phonemeLength[position] = phonemeLengthTable[ctx->phonemeindex[position]];
+            ctx->phonemeLength[position] = phonemeLengthTable[ctx->phonemeIndex[position]];
         }
         else
         {
-            ctx->phonemeLength[position] = phonemeStressedLengthTable[ctx->phonemeindex[position]];
+            ctx->phonemeLength[position] = phonemeStressedLengthTable[ctx->phonemeIndex[position]];
         }
         position++;
     }
@@ -294,7 +294,7 @@ void AdjustPhonemeLengths(SAMContext *ctx)
         unsigned char X = 0;
         unsigned char index;
 
-        while ((index = ctx->phonemeindex[X]) != END)
+        while ((index = ctx->phonemeIndex[X]) != END)
         {
             unsigned char loopIndex;
 
@@ -307,7 +307,7 @@ void AdjustPhonemeLengths(SAMContext *ctx)
 
             loopIndex = X;
 
-            while (--X && !(flags[ctx->phonemeindex[X]] & FLAG_VOWEL))
+            while (--X && !(flags[ctx->phonemeIndex[X]] & FLAG_VOWEL))
                 ; // back up while not a vowel
             if (X == 0)
                 break;
@@ -315,7 +315,7 @@ void AdjustPhonemeLengths(SAMContext *ctx)
             do
             {
                 // test for vowel
-                index = ctx->phonemeindex[X];
+                index = ctx->phonemeIndex[X];
 
                 // test for fricative/unvoiced or not voiced
                 if (!(flags[index] & FLAG_FRICATIVE) || (flags[index] & FLAG_VOICED))
@@ -335,18 +335,18 @@ void AdjustPhonemeLengths(SAMContext *ctx)
     unsigned char loopIndex = 0;
     unsigned char index;
 
-    while ((index = ctx->phonemeindex[loopIndex]) != END)
+    while ((index = ctx->phonemeIndex[loopIndex]) != END)
     {
         unsigned char X = loopIndex;
 
         if (flags[index] & FLAG_VOWEL)
         {
-            index = ctx->phonemeindex[loopIndex + 1];
+            index = ctx->phonemeIndex[loopIndex + 1];
             if (!(flags[index] & FLAG_CONSONANT))
             {
                 if ((index == 18) || (index == 19))
                 { // 'RX', 'LX'
-                    index = ctx->phonemeindex[loopIndex + 2];
+                    index = ctx->phonemeIndex[loopIndex + 2];
                     if ((flags[index] & FLAG_CONSONANT))
                     {
                         ctx->phonemeLength[loopIndex]--;
@@ -381,7 +381,7 @@ void AdjustPhonemeLengths(SAMContext *ctx)
             // RULE: <NASAL> <STOP CONSONANT>
             //       Set punctuation length to 6
             //       Set stop consonant length to 5
-            index = ctx->phonemeindex[++X];
+            index = ctx->phonemeIndex[++X];
             if (index != END && (flags[index] & FLAG_STOPCONS))
             {
                 ctx->phonemeLength[X] = 6;     // set stop consonant length to 6
@@ -394,7 +394,7 @@ void AdjustPhonemeLengths(SAMContext *ctx)
             //       Shorten both to (length/2 + 1)
 
             // move past silence
-            while ((index = ctx->phonemeindex[++X]) == 0)
+            while ((index = ctx->phonemeIndex[++X]) == 0)
                 ;
 
             if (index != END && (flags[index] & FLAG_STOPCONS))
@@ -410,7 +410,7 @@ void AdjustPhonemeLengths(SAMContext *ctx)
         { // liquic consonant?
             // RULE: <VOICED NON-VOWEL> <DIPTHONG>
             //       Decrease <DIPTHONG> by 2
-            index = ctx->phonemeindex[X - 1]; // prior phoneme;
+            index = ctx->phonemeIndex[X - 1]; // prior phoneme;
 
             // FIXME: The debug code here breaks the rule.
             // prior phoneme a stop consonant>
@@ -427,9 +427,9 @@ void AddVoicedStopConsonants(SAMContext *ctx)
 {
     unsigned char pos = 0;
 
-    while (ctx->phonemeindex[pos] != END)
+    while (ctx->phonemeIndex[pos] != END)
     {
-        unsigned char index = ctx->phonemeindex[pos];
+        unsigned char index = ctx->phonemeIndex[pos];
 
         if ((flags[index] & FLAG_STOPCONS))
         {
@@ -437,9 +437,9 @@ void AddVoicedStopConsonants(SAMContext *ctx)
             {
                 unsigned char A;
                 unsigned char X = pos;
-                while (!ctx->phonemeindex[++X])
+                while (!ctx->phonemeIndex[++X])
                     ; /* Skip pause */
-                A = ctx->phonemeindex[X];
+                A = ctx->phonemeIndex[X];
                 if (A != END)
                 {
                     if ((flags[A] & 8) || (A == 36) || (A == 37))
@@ -464,11 +464,11 @@ void AddVoicedStopConsonants(SAMContext *ctx)
 void CheckPhonemes(SAMContext *ctx)
 {
     unsigned char pos = 0;
-    while (ctx->phonemeindex[pos] != END)
+    while (ctx->phonemeIndex[pos] != END)
     {
-        if (ctx->phonemeindex[pos] > 80)
+        if (ctx->phonemeIndex[pos] > 80)
         {
-            ctx->phonemeindex[pos] = END;
+            ctx->phonemeIndex[pos] = END;
             break; // error: delete all behind it
         }
         ++pos;
@@ -483,7 +483,7 @@ void InsertBreath(SAMContext *ctx)
 
     unsigned char pos = 0;
 
-    while ((index = ctx->phonemeindex[pos]) != END)
+    while ((index = ctx->phonemeIndex[pos]) != END)
     {
         len += ctx->phonemeLength[pos];
         if (len < 232)
@@ -505,7 +505,7 @@ void InsertBreath(SAMContext *ctx)
         else
         {
             pos = lastNonPunctPos;
-            ctx->phonemeindex[pos] = 31; // 'Q*' glottal stop
+            ctx->phonemeIndex[pos] = 31; // 'Q*' glottal stop
             ctx->phonemeLength[pos] = 4;
             ctx->stress[pos] = 0;
 

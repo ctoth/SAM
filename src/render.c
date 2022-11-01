@@ -9,20 +9,26 @@
 void WriteToBuf(SAMContext *ctx, int index, unsigned char A)
 {
 
-    int k;
-    ctx->bufferpos += timetable[ctx->oldtimetableindex][index];
-    ctx->oldtimetableindex = index;
-
+    int k, n;
+    unsigned char zeroCount = timetable[ctx->oldTimeTableIndex][index] / 50;
+    ctx->oldTimeTableIndex = index;
+    // printf("Zero count: %d\n", zeroCount);
     // create tiny audio buffer
     unsigned int l = 0;
-    unsigned char *buf = malloc(16);
-    for (k = 0; k < 3; k++)
+    unsigned char *buf = malloc(16 + zeroCount);
+    // write silence to comply with time table
+    for (n = 0; n < zeroCount; n++)
+    {
+        // buf[l++] = (0 &15) *16;
+    }
+    for (k = 0; k < 5; k++)
     {
         // the old code saved to a buffer on the global context.
         // the new code will write to our tiny buffer then call the callback
         // ctx->buffer[ctx->bufferpos / 50 + k] = (A & 15) * 16;
         buf[l++] = (A & 15) * 16;
     }
+    // printf("Adding %d to buffer", l);
     ctx->toSpeak.output_callback(ctx->toSpeak.userdata, buf, l);
 }
 

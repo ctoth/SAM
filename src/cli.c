@@ -75,7 +75,7 @@ void output_audio_finished_callback(void *userdata)
     ma_result result;
     ma_engine_config engineConfig;
     engineConfig = ma_engine_config_init();
-    engineConfig.sampleRate = 22050;
+    engineConfig.sampleRate = 44100;
     engineConfig.channels = 1;
     result = ma_engine_init(&engineConfig, &engine);
     if (result != MA_SUCCESS)
@@ -84,7 +84,7 @@ void output_audio_finished_callback(void *userdata)
         return;
     }
     // setup miniaudio buffer
-    ma_audio_buffer_config config = ma_audio_buffer_config_init(ma_format_u8, 22050, audioBuffer->length, audioBuffer->buffer, NULL);
+    ma_audio_buffer_config config = ma_audio_buffer_config_init(ma_format_u8, 44100, audioBuffer->length, audioBuffer->buffer, NULL);
     config.channels = 1;
 
     ma_audio_buffer miniaudio_buffer;

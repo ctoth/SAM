@@ -71,13 +71,13 @@ int ParsePhonemes(SAMContext *ctx)
         if ((match = full_match(sign1, sign2)) != -1)
         {
             // Matched both characters (no wildcards)
-            ctx->phonemeindex[position++] = (unsigned char)match;
+            ctx->phonemeIndex[position++] = (unsigned char)match;
             ++srcpos; // Skip the second character of the input as we've matched it
         }
         else if ((match = wild_match(sign1)) != -1)
         {
             // Matched just the first character (with second character matching '*'
-            ctx->phonemeindex[position++] = (unsigned char)match;
+            ctx->phonemeIndex[position++] = (unsigned char)match;
         }
         else
         {
@@ -94,7 +94,7 @@ int ParsePhonemes(SAMContext *ctx)
         }
     } // while
 
-    ctx->phonemeindex[position] = END;
+    ctx->phonemeIndex[position] = END;
     return 1;
 }
 
