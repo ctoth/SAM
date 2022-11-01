@@ -4,9 +4,8 @@
 typedef struct SAMReciterContext
 {
     unsigned char reciterInput[256];
-    unsigned char A;
+    unsigned char workingChar; // The current char which is often mutated
     unsigned char reciterIndex;
-
 } SAMReciterContext;
 
 unsigned int IsNextInput(SAMReciterContext *ctx, const char *str);

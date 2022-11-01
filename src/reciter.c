@@ -41,8 +41,8 @@ int TextToPhonemes(unsigned char *input)
     ctx->reciterIndex = 0;
     do
     {
-        ctx->A = input[ctx->reciterIndex] & 127;
-        ctx->reciterInput[++ctx->reciterIndex] = ctx->A;
+        ctx->workingChar = input[ctx->reciterIndex] & 127;
+        ctx->reciterInput[++ctx->reciterIndex] = ctx->workingChar;
     } while (ctx->reciterIndex < 255);
     ctx->reciterInput[255] = 27;
 
@@ -65,12 +65,12 @@ pos36554:
             if (mem64 != '.')
                 break;
             ctx->reciterIndex++;
-            ctx->A = tab36376[ctx->reciterInput[ctx->reciterIndex]] & 1;
-            if (ctx->A != 0)
+            ctx->workingChar = tab36376[ctx->reciterInput[ctx->reciterIndex]] & 1;
+            if (ctx->workingChar != 0)
                 break;
             phonemeOutputPos++;
             ctx->reciterIndex = phonemeOutputPos;
-            ctx->A = '.';
+            ctx->workingChar = '.';
             input[ctx->reciterIndex] = '.';
         }
         mem57 = tab36376[mem64];
@@ -165,8 +165,8 @@ pos36700:
                         r = 1;
                     else
                     {
-                        ctx->A = ctx->reciterInput[--ctx->reciterIndex];
-                        if ((ctx->A != 'C') && (ctx->A != 'S'))
+                        ctx->workingChar = ctx->reciterInput[--ctx->reciterIndex];
+                        if ((ctx->workingChar != 'C') && (ctx->workingChar != 'S'))
                             r = 1;
                     }
                 }
@@ -175,17 +175,17 @@ pos36700:
             case '@':
                 if (!Code37055(ctx, mem59 - 1, 4))
                 {
-                    ctx->A = ctx->reciterInput[ctx->reciterIndex];
-                    if (ctx->A != 72)
+                    ctx->workingChar = ctx->reciterInput[ctx->reciterIndex];
+                    if (ctx->workingChar != 72)
                         r = 1;
-                    if ((ctx->A != 84) && (ctx->A != 67) && (ctx->A != 83))
+                    if ((ctx->workingChar != 84) && (ctx->workingChar != 67) && (ctx->workingChar != 83))
                         r = 1;
                 }
                 break;
             case '+':
                 ctx->reciterIndex = mem59;
-                ctx->A = ctx->reciterInput[--ctx->reciterIndex];
-                if ((ctx->A != 'E') && (ctx->A != 'I') && (ctx->A != 'Y'))
+                ctx->workingChar = ctx->reciterInput[--ctx->reciterIndex];
+                if ((ctx->workingChar != 'E') && (ctx->workingChar != 'I') && (ctx->workingChar != 'Y'))
                     r = 1;
                 break;
             case ':':
@@ -210,13 +210,13 @@ pos36700:
         {
             if ((tab36376[ctx->reciterInput[ctx->reciterIndex + 1]] & 128) != 0)
             {
-                ctx->A = ctx->reciterInput[++ctx->reciterIndex];
-                if (ctx->A == 'L')
+                ctx->workingChar = ctx->reciterInput[++ctx->reciterIndex];
+                if (ctx->workingChar == 'L')
                 {
                     if (ctx->reciterInput[++ctx->reciterIndex] != 'Y')
                         goto pos36700;
                 }
-                else if ((ctx->A != 'R') && (ctx->A != 'S') && (ctx->A != 'D') && !IsNextInput(ctx, "FUL"))
+                else if ((ctx->workingChar != 'R') && (ctx->workingChar != 'S') && (ctx->workingChar != 'D') && !IsNextInput(ctx, "FUL"))
                     goto pos36700;
             }
         }
@@ -240,10 +240,10 @@ pos36700:
 
                     while (1)
                     {
-                        mem57 = ctx->A = GetRuleByte(curRulePos, Y);
-                        ctx->A = ctx->A & 127;
-                        if (ctx->A != '=')
-                            input[++phonemeOutputPos] = ctx->A;
+                        mem57 = ctx->workingChar = GetRuleByte(curRulePos, Y);
+                        ctx->workingChar = ctx->workingChar & 127;
+                        if (ctx->workingChar != '=')
+                            input[++phonemeOutputPos] = ctx->workingChar;
                         if ((mem57 & 128) != 0)
                             goto pos36554;
                         Y++;
@@ -263,14 +263,14 @@ pos36700:
 
             if (r == 0)
             {
-                ctx->A = mem57;
-                if (ctx->A == '@')
+                ctx->workingChar = mem57;
+                if (ctx->workingChar == '@')
                 {
                     if (Code37055(ctx, mem58 + 1, 4) == 0)
                     {
-                        ctx->A = ctx->reciterInput[ctx->reciterIndex];
-                        if ((ctx->A != 82) && (ctx->A != 84) &&
-                            (ctx->A != 67) && (ctx->A != 83))
+                        ctx->workingChar = ctx->reciterInput[ctx->reciterIndex];
+                        if ((ctx->workingChar != 82) && (ctx->workingChar != 84) &&
+                            (ctx->workingChar != 67) && (ctx->workingChar != 83))
                             r = 1;
                     }
                     else
@@ -278,14 +278,14 @@ pos36700:
                         r = -2;
                     }
                 }
-                else if (ctx->A == ':')
+                else if (ctx->workingChar == ':')
                 {
                     while (Code37055(ctx, mem58 + 1, 32))
                         mem58 = ctx->reciterIndex;
                     r = -2;
                 }
                 else
-                    r = handle_ch(ctx, ctx->A, mem58 + 1);
+                    r = handle_ch(ctx, ctx->workingChar, mem58 + 1);
             }
 
             if (r == 1)
@@ -298,7 +298,7 @@ pos36700:
             if (r == 0)
                 mem58 = ctx->reciterIndex;
         } while (r == 0);
-    } while (ctx->A == '%');
+    } while (ctx->workingChar == '%');
     return 0;
 }
 
@@ -307,8 +307,8 @@ unsigned int IsNextInput(SAMReciterContext *ctx, const char *str)
     while (*str)
     {
         unsigned char ch = *str;
-        ctx->A = ctx->reciterInput[ctx->reciterIndex++];
-        if (ctx->A != ch)
+        ctx->workingChar = ctx->reciterInput[ctx->reciterIndex++];
+        if (ctx->workingChar != ch)
             return 0;
         ++str;
     }
